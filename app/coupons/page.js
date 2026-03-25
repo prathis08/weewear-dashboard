@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Sidebar from '@/components/Sidebar'
 import CouponForm from '@/components/CouponForm'
+import DeleteModal from '@/components/DeleteModal'
 
 function formatDate(dateStr) {
   if (!dateStr) return '—'
@@ -15,6 +16,8 @@ export default function CouponsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showForm, setShowForm] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(null) // { id, code }
+  const [deleting, setDeleting] = useState(false)
 
   async function fetchCoupons() {
     try {
@@ -34,15 +37,18 @@ export default function CouponsPage() {
     fetchCoupons()
   }, [])
 
-  async function handleDelete(id, code) {
-    if (!window.confirm(`Delete coupon "${code}"? This cannot be undone.`)) return
-
+  async function confirmDelete() {
+    setDeleting(true)
     try {
-      const res = await fetch(`/api/coupons/${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/coupons/${deleteTarget.id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Failed to delete coupon')
+      setDeleteTarget(null)
       await fetchCoupons()
     } catch (err) {
-      alert(err.message)
+      setError(err.message)
+      setDeleteTarget(null)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -68,6 +74,16 @@ export default function CouponsPage() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
+
+      {deleteTarget && (
+        <DeleteModal
+          title={`Delete coupon "${deleteTarget.code}"?`}
+          description="This action cannot be undone. The coupon will be permanently removed."
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteTarget(null)}
+          loading={deleting}
+        />
+      )}
 
       <main className="flex-1 p-8">
         <div className="flex items-center justify-between mb-6">
@@ -174,7 +190,7 @@ export default function CouponsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <button
-                        onClick={() => handleDelete(coupon.id, coupon.code)}
+                        onClick={() => setDeleteTarget({ id: coupon.id, code: coupon.code })}
                         className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition-colors"
                       >
                         Delete

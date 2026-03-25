@@ -4,11 +4,14 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Sidebar from '@/components/Sidebar'
+import DeleteModal from '@/components/DeleteModal'
 
 export default function ProductsPage() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState(null) // { id, name }
+  const [deleting, setDeleting] = useState(false)
 
   async function fetchProducts() {
     try {
@@ -28,21 +31,34 @@ export default function ProductsPage() {
     fetchProducts()
   }, [])
 
-  async function handleDelete(id, name) {
-    if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return
-
+  async function confirmDelete() {
+    setDeleting(true)
     try {
-      const res = await fetch(`/api/products/${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/products/${deleteTarget.id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Failed to delete product')
+      setDeleteTarget(null)
       await fetchProducts()
     } catch (err) {
-      alert(err.message)
+      setError(err.message)
+      setDeleteTarget(null)
+    } finally {
+      setDeleting(false)
     }
   }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
+
+      {deleteTarget && (
+        <DeleteModal
+          title={`Delete "${deleteTarget.name}"?`}
+          description="This action cannot be undone. The product will be permanently removed."
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteTarget(null)}
+          loading={deleting}
+        />
+      )}
 
       <main className="flex-1 p-8">
         <div className="flex items-center justify-between mb-6">
@@ -148,7 +164,7 @@ export default function ProductsPage() {
                           Edit
                         </Link>
                         <button
-                          onClick={() => handleDelete(product.id, product.name)}
+                          onClick={() => setDeleteTarget({ id: product.id, name: product.name })}
                           className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition-colors"
                         >
                           Delete

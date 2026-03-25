@@ -22,6 +22,7 @@ export default function ProductForm({ product }) {
   })
 
   const [uploading, setUploading] = useState(false)
+  const [imagePublicId, setImagePublicId] = useState('')
   const [imagePreview, setImagePreview] = useState(product?.image_url || '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -54,6 +55,7 @@ export default function ProductForm({ product }) {
       const data = await res.json()
       setForm((prev) => ({ ...prev, image_url: data.url }))
       setImagePreview(data.url)
+      setImagePublicId(data.public_id || '')
     } catch {
       setError('Image upload failed. Please try again.')
     } finally {
@@ -264,7 +266,7 @@ export default function ProductForm({ product }) {
 
           {imagePreview && (
             <div className="mb-3">
-              <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-gray-200">
+              <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-gray-200 group">
                 <Image
                   src={imagePreview}
                   alt="Product preview"
@@ -272,8 +274,29 @@ export default function ProductForm({ product }) {
                   className="object-cover"
                   unoptimized
                 />
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (imagePublicId) {
+                      await fetch('/api/upload', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ public_id: imagePublicId }),
+                      })
+                      setImagePublicId('')
+                    }
+                    setImagePreview('')
+                    setForm((prev) => ({ ...prev, image_url: '' }))
+                  }}
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Remove image"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">Current image</p>
+              <p className="text-xs text-gray-400 mt-1">Hover to remove</p>
             </div>
           )}
 
