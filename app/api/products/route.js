@@ -29,14 +29,12 @@ export async function POST(request) {
       sizes_stock,
       size_chart_url,
       image_url,
-      rating,
-      review_count,
     } = rest
 
     const result = await query(
       `INSERT INTO products
-        (name, description, price, original_price, gender, category, sizes, stock, sizes_stock, size_chart_url, image_url, rating, review_count)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        (name, description, price, original_price, gender, category, sizes, stock, sizes_stock, size_chart_url, image_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
       [
         name,
@@ -50,8 +48,6 @@ export async function POST(request) {
         JSON.stringify(sizes_stock || {}),
         size_chart_url || null,
         image_url || null,
-        rating || 0,
-        review_count || 0,
       ]
     )
 

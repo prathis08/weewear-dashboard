@@ -39,10 +39,8 @@ export async function PUT(request, { params }) {
         stock = $8,
         sizes_stock = $9,
         size_chart_url = $10,
-        image_url = $11,
-        rating = $12,
-        review_count = $13
-       WHERE id = $14
+        image_url = $11
+       WHERE id = $12
        RETURNING *`,
       [
         rest.name,
@@ -56,8 +54,6 @@ export async function PUT(request, { params }) {
         JSON.stringify(rest.sizes_stock || {}),
         rest.size_chart_url || null,
         rest.image_url || null,
-        rest.rating || 0,
-        rest.review_count || 0,
         id,
       ]
     )
