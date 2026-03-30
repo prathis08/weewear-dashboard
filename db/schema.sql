@@ -1,5 +1,7 @@
 -- WeeWear full schema
--- Run on a fresh database: psql $DATABASE_URL -f db/schema.sql
+-- Safe to run on both fresh and existing databases.
+-- CREATE TABLE IF NOT EXISTS creates tables that don't exist yet.
+-- ALTER TABLE ... ADD COLUMN IF NOT EXISTS adds any missing columns to existing tables.
 --
 -- Storefront Prisma models that reference this schema must use:
 --   model Product      { id String @id @default(uuid()) @db.Uuid ... }

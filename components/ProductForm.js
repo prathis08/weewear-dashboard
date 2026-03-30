@@ -16,8 +16,6 @@ export default function ProductForm({ product }) {
     original_price: product?.original_price || '',
     gender: product?.gender || '',
     category: product?.category || '',
-    rating: product?.rating ?? '',
-    review_count: product?.review_count ?? '',
   })
 
   // Per-size stock entries: [{ size: 'S', stock: '10' }, ...]
@@ -191,8 +189,6 @@ export default function ProductForm({ product }) {
       sizes_stock,
       size_chart_url: sizeChart.url || null,
       image_url: images[0]?.url || null,
-      rating: form.rating !== '' ? parseFloat(form.rating) : 0,
-      review_count: form.review_count !== '' ? parseInt(form.review_count, 10) : 0,
       images: images.map((img, i) => ({ url: img.url, position: i })),
     }
 
@@ -391,38 +387,6 @@ export default function ProductForm({ product }) {
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Rating
-            <span className="text-gray-400 font-normal ml-1">(0–5)</span>
-          </label>
-          <input
-            type="number"
-            name="rating"
-            value={form.rating}
-            onChange={handleChange}
-            min="0"
-            max="5"
-            step="0.1"
-            className="border border-gray-300 rounded px-3 py-2 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="4.5"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Review Count
-          </label>
-          <input
-            type="number"
-            name="review_count"
-            value={form.review_count}
-            onChange={handleChange}
-            min="0"
-            className="border border-gray-300 rounded px-3 py-2 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="0"
-          />
-        </div>
 
         {/* Size chart */}
         <div className="sm:col-span-2">
