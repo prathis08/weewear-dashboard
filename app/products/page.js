@@ -6,20 +6,25 @@ import Image from 'next/image'
 import Sidebar from '@/components/Sidebar'
 import DeleteModal from '@/components/DeleteModal'
 
+const GENDERS = ['Men', 'Women', 'Unisex']
+
 export default function ProductsPage() {
   const [products, setProducts] = useState([])
+  const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [deleteTarget, setDeleteTarget] = useState(null) // { id, name }
+  const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
+
+  const [filterGender, setFilterGender] = useState('')
+  const [filterCategory, setFilterCategory] = useState('')
 
   async function fetchProducts() {
     try {
       setLoading(true)
       const res = await fetch('/api/products')
       if (!res.ok) throw new Error('Failed to fetch products')
-      const data = await res.json()
-      setProducts(data)
+      setProducts(await res.json())
     } catch (err) {
       setError(err.message)
     } finally {
@@ -29,7 +34,28 @@ export default function ProductsPage() {
 
   useEffect(() => {
     fetchProducts()
+    fetch('/api/categories')
+      .then((r) => r.json())
+      .then((data) => setCategories(Array.isArray(data) ? data : []))
+      .catch(() => {})
   }, [])
+
+  function handleGenderFilter(gender) {
+    setFilterGender(gender)
+    setFilterCategory('') // reset category when gender changes
+  }
+
+  // Categories available for the selected gender
+  const categoryOptions = categories.filter(
+    (c) => !filterGender || !c.gender || c.gender === filterGender
+  )
+
+  // Apply filters
+  const filtered = products.filter((p) => {
+    if (filterGender && p.gender !== filterGender) return false
+    if (filterCategory && p.category !== filterCategory) return false
+    return true
+  })
 
   async function confirmDelete() {
     setDeleting(true)
@@ -61,11 +87,15 @@ export default function ProductsPage() {
       )}
 
       <main className="flex-1 p-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-5">
           <div>
             <h1 className="text-xl font-bold text-gray-900">Products</h1>
             <p className="text-sm text-gray-500 mt-0.5">
-              {!loading && `${products.length} product${products.length !== 1 ? 's' : ''}`}
+              {!loading && (
+                filtered.length === products.length
+                  ? `${products.length} product${products.length !== 1 ? 's' : ''}`
+                  : `${filtered.length} of ${products.length} product${products.length !== 1 ? 's' : ''}`
+              )}
             </p>
           </div>
           <Link
@@ -74,6 +104,58 @@ export default function ProductsPage() {
           >
             + Add Product
           </Link>
+        </div>
+
+        {/* Filter bar */}
+        <div className="flex flex-wrap items-center gap-3 mb-5">
+          {/* Gender pills */}
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => handleGenderFilter('')}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                !filterGender
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              All
+            </button>
+            {GENDERS.map((g) => (
+              <button
+                key={g}
+                onClick={() => handleGenderFilter(g)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                  filterGender === g
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {g}
+              </button>
+            ))}
+          </div>
+
+          {/* Category dropdown */}
+          <select
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+            className="border border-gray-300 rounded px-3 py-1.5 text-xs bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Categories</option>
+            {categoryOptions.map((c) => (
+              <option key={c.id} value={c.name}>{c.name}</option>
+            ))}
+          </select>
+
+          {/* Clear filters */}
+          {(filterGender || filterCategory) && (
+            <button
+              onClick={() => { setFilterGender(''); setFilterCategory('') }}
+              className="text-xs text-gray-400 hover:text-gray-600 underline"
+            >
+              Clear filters
+            </button>
+          )}
         </div>
 
         {loading && (
@@ -100,23 +182,35 @@ export default function ProductsPage() {
           </div>
         )}
 
-        {!loading && !error && products.length > 0 && (
+        {!loading && !error && products.length > 0 && filtered.length === 0 && (
+          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+            <p className="text-gray-400 text-sm">No products match the selected filters.</p>
+            <button
+              onClick={() => { setFilterGender(''); setFilterCategory('') }}
+              className="inline-block mt-3 text-sm text-blue-600 hover:underline"
+            >
+              Clear filters
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && filtered.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50">
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Image</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Name</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Gender</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Category</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Price</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Orig. Price</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Stock</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Sizes</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Sizes &amp; Stock</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {products.map((product) => (
+                {filtered.map((product) => (
                   <tr key={product.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3">
                       {product.image_url ? (
@@ -140,20 +234,35 @@ export default function ProductsPage() {
                     <td className="px-4 py-3">
                       <span className="font-medium text-gray-900">{product.name}</span>
                     </td>
+                    <td className="px-4 py-3 text-gray-600">{product.gender || '—'}</td>
                     <td className="px-4 py-3 text-gray-600">{product.category || '—'}</td>
                     <td className="px-4 py-3 text-gray-900 font-medium">₹{parseFloat(product.price).toLocaleString('en-IN')}</td>
                     <td className="px-4 py-3 text-gray-500">
                       {product.original_price ? `₹${parseFloat(product.original_price).toLocaleString('en-IN')}` : '—'}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`font-medium ${product.stock === 0 ? 'text-red-600' : 'text-gray-900'}`}>
-                        {product.stock}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {Array.isArray(product.sizes) && product.sizes.length > 0
-                        ? product.sizes.join(', ')
-                        : '—'}
+                      {product.sizes_stock && Object.keys(product.sizes_stock).length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {Object.entries(product.sizes_stock).map(([size, stock]) => (
+                            <span
+                              key={size}
+                              className={`inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded border ${
+                                stock === 0
+                                  ? 'border-red-200 bg-red-50 text-red-600'
+                                  : 'border-gray-200 bg-gray-50 text-gray-700'
+                              }`}
+                            >
+                              <span className="font-medium">{size}</span>
+                              <span className="text-gray-400">·</span>
+                              <span>{stock}</span>
+                            </span>
+                          ))}
+                        </div>
+                      ) : Array.isArray(product.sizes) && product.sizes.length > 0 ? (
+                        <span className="text-gray-600 text-sm">{product.sizes.join(', ')}</span>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
