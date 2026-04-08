@@ -7,8 +7,8 @@ export async function GET() {
       SELECT
         o.id,
         o.order_number,
-        o.razorpay_order_id,
-        o.razorpay_payment_id,
+        o.cf_order_id,
+        o.cf_payment_id,
         o.status,
         o.total,
         o.discount,

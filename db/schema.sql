@@ -95,26 +95,27 @@ CREATE TABLE IF NOT EXISTS cart_items (
 -- ORDERS
 -- ================================================================
 CREATE TABLE IF NOT EXISTS orders (
-  id                  SERIAL PRIMARY KEY,
-  user_id             INTEGER REFERENCES users(id),
-  razorpay_order_id   VARCHAR(100) UNIQUE,
-  razorpay_payment_id VARCHAR(100),
-  status              VARCHAR(50) DEFAULT 'pending',
-  total               NUMERIC(10,2),
-  shipping_address    JSONB,
-  coupon_code         VARCHAR(50),
-  discount            NUMERIC(10,2) DEFAULT 0,
-  created_at          TIMESTAMP DEFAULT NOW()
+  id               TEXT          PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  order_number     VARCHAR(8)    NOT NULL UNIQUE,
+  user_id          TEXT          REFERENCES users(id),
+  cf_order_id      VARCHAR(100)  UNIQUE,
+  cf_payment_id    VARCHAR(100),
+  status           VARCHAR(50)   NOT NULL DEFAULT 'pending',
+  total            NUMERIC(10,2),
+  shipping_address JSONB,
+  coupon_code      VARCHAR(50),
+  discount         NUMERIC(10,2) NOT NULL DEFAULT 0,
+  created_at       TIMESTAMP(3)  NOT NULL DEFAULT NOW()
 );
 
 -- ================================================================
 -- ORDER ITEMS
 -- ================================================================
 CREATE TABLE IF NOT EXISTS order_items (
-  id         SERIAL PRIMARY KEY,
-  order_id   INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-  product_id UUID REFERENCES products(id),
-  quantity   INTEGER NOT NULL,
+  id         TEXT          PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  order_id   TEXT          NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  product_id TEXT          REFERENCES products(id),
+  quantity   INTEGER       NOT NULL,
   size       VARCHAR(10),
   price      NUMERIC(10,2) NOT NULL
 );

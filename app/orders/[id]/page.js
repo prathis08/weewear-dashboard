@@ -229,8 +229,8 @@ export default function OrderDetailPage() {
                 {/* Payment */}
                 <div className="bg-white rounded-lg shadow-sm px-5 py-4 space-y-3">
                   <h2 className="text-sm font-semibold text-gray-800">Payment</h2>
-                  <Field label="Razorpay Order ID"   value={order.razorpay_order_id} />
-                  <Field label="Razorpay Payment ID" value={order.razorpay_payment_id} />
+                  <Field label="Cashfree Order ID"   value={order.cf_order_id} />
+                  <Field label="Cashfree Payment ID" value={order.cf_payment_id} />
                 </div>
               </div>
             </div>
